@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Database } from '@/lib/database.types'
 
-type Word = Database['public']['Tables']['words']['Row']
+type Word = Database['public']['Tables']['words']['Row'] 
+
 
 const ITEMS_PER_PAGE = 20
 
@@ -24,7 +25,7 @@ export function useWords() {
 
       // Get total count
       const { count } = await supabase
-        .from('words')
+        .from('flashcard')
         .select('*', { count: 'exact', head: true })
 
       setTotalCount(count || 0)
@@ -33,18 +34,13 @@ export function useWords() {
       const from = (currentPage - 1) * ITEMS_PER_PAGE
       const to = from + ITEMS_PER_PAGE - 1
 
-      const { data, error } = await supabase
-        .from('words')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(from, to)
+      const { data, error } = await supabase.from('flashcard').select('*') .range(from, to)
+      const dataWords = data?.map((item) => ({
+        id: item.id,
+        word: item.word1,
+      })) ?? []
 
-      if (error) {
-        console.error('Error fetching words:', error)
-        return
-      }
-
-      setWords(data || [])
+      setWords(dataWords as Word[])
     } catch (error) {
       console.error('Error:', error)
     } finally {
