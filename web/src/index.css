@@ -188,3 +188,95 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Flashcard flip animation */
+.flashcard-container {
+  perspective: 1200px;
+  width: 100%;
+  height: 0;
+  padding-bottom: 66.67%; /* 3:2 aspect ratio */
+  position: relative;
+  cursor: pointer;
+}
+
+.flashcard-container > .flashcard-inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flashcard-inner.flashcard-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.flashcard-front {
+  background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%);
+  color: #0c4a6e;
+  border: 2px solid #7dd3fc;
+}
+
+.flashcard-back {
+  background: linear-gradient(145deg, #5eead4 0%, #2dd4bf 50%, #14b8a6 100%);
+  color: #134e4a;
+  border: 2px solid #2dd4bf;
+  transform: rotateY(180deg);
+}
+
+.dark .flashcard-front {
+  background: linear-gradient(145deg, #0c4a6e 0%, #075985 50%, #0369a1 100%);
+  color: #e0f2fe;
+  border-color: #0ea5e9;
+}
+
+.dark .flashcard-back {
+  background: linear-gradient(145deg, #134e4a 0%, #0f766e 50%, #0d9488 100%);
+  color: #ccfbf1;
+  border-color: #2dd4bf;
+}
+
+/* Memory game: card back (hidden side) */
+.memory-card-back {
+  background: linear-gradient(145deg, #669d6d 0%, #55895f 50%, #48cbd5 100%) !important;
+  color: #6fbb1f !important;
+  border: 2px solid #475569 !important;
+}
+
+.dark .memory-card-back {
+  background: linear-gradient(145deg, #334155 0%, #1e293b 50%, #0f172a 100%) !important;
+  color: #3ed38d !important;
+  border-color: #475569 !important;
+}
+
+.memory-card-word {
+  background: linear-gradient(145deg, #5eead4 0%, #2dd4bf 50%, #14b8a6 100%) !important;
+  color: #21b158 !important;
+  border: 2px solid #2dd4bf !important;
+}
+
+.dark .memory-card-word {
+  background: linear-gradient(145deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%) !important;
+  color: #ccfbf1 !important;
+  border-color: #2dd4bf !important;
+}
+
+.memory-card-matched .flashcard-face.memory-card-word {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
+}
