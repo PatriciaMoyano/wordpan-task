@@ -10,6 +10,8 @@ from supabase import create_client, Client
 
 from crews.random_phrase_crew.crew import RandomPhraseCrew
 from crews.random_phrase_crew.schemas import PhraseOutput
+from crews.example_sentence_crew.crew import ExampleSentenceCrew
+from crews.example_sentence_crew.schemas import ExampleSentenceInput, ExampleSentenceOutput
 
 from lib.tracer import traceable
 
@@ -18,18 +20,20 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configure CORS - allow requests from localhost frontend
+# Configure CORS - allow requests from localhost frontend (any port Vite may use)
+_cors_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+for port in (5173, 5174, 5175, 5176, 5177, 5178, 5179, 5180):
+    _cors_origins.append(f"http://localhost:{port}")
+    _cors_origins.append(f"http://127.0.0.1:{port}")
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "http://localhost:5173",  # Vite dev server
-            "http://localhost:3000",  # Alternative port
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:3000"
-        ],
+        "origins": _cors_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
+        "supports_credentials": True,
     }
 })
 
@@ -156,12 +160,102 @@ async def get_random_phrase():
         if not isinstance(words, list) or len(words) == 0:
             return jsonify({"error": "'words' must be a non-empty array"}), 400
 
+        if not os.getenv("GROQ_API_KEY", "").strip():
+            return (
+                jsonify({
+                    "error": "GROQ_API_KEY is not set. Add it to ai/.env (get a free key at https://console.groq.com)"
+                }),
+                503,
+            )
+
         # Get user context from Supabase
         user_id = request.user.id
         user_context = await get_user_context(user_id)
 
         # Generate the phrase
         result = await generate_random_phrase(words, user_context or "")
+
+        return jsonify(result.model_dump()), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+@app.route("/api/generate-example-sentence", methods=["POST"])
+@require_auth
+async def generate_example_sentence():
+    """
+    Generate an example sentence for a vocabulary word.
+
+    Request body:
+        {
+            "word_english": "apple",
+            "word_spanish": "manzana"
+        }
+
+    Headers:
+        Authorization: Bearer <jwt_token>
+
+    Response:
+        {
+            "sentence_english": "I eat an apple every morning.",
+            "sentence_spanish": "Como una manzana cada mañana.",
+            "explanation": "This sentence demonstrates the use of 'apple' in a common daily routine context."
+        }
+    """
+    try:
+        # Get word data from request body
+        data = request.get_json()
+
+        if not data or "word_english" not in data:
+            return jsonify({"error": "Request body must include 'word_english'"}), 400
+
+        word_english = data.get("word_english", "").strip()
+        word_spanish = data.get("word_spanish", "").strip()
+
+        if not word_english:
+            return jsonify({"error": "'word_english' cannot be empty"}), 400
+        
+        # If no Spanish translation provided, use a placeholder or leave empty
+        if not word_spanish:
+            word_spanish = "(translation not provided)"
+
+        # Check for API key
+        if not os.getenv("GROQ_API_KEY", "").strip():
+            return (
+                jsonify({
+                    "error": "GROQ_API_KEY is not set. Add it to ai/.env (get a free key at https://console.groq.com)"
+                }),
+                503,
+            )
+
+        # Get user profile from Supabase
+        user_id = request.user.id
+        try:
+            profile_response = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
+            profile = profile_response.data
+
+            user_name = profile.get("full_name", "Student") if profile else "Student"
+            language_level = profile.get("language_level", "intermediate") if profile else "intermediate"
+            learning_goal = profile.get("learning_goal", "general language learning") if profile else "general language learning"
+        except Exception as e:
+            print(f"Error fetching user profile: {e}")
+            user_name = "Student"
+            language_level = "intermediate"
+            learning_goal = "general language learning"
+
+        # Create input for the crew
+        crew_input = ExampleSentenceInput(
+            word_english=word_english,
+            word_spanish=word_spanish,
+            user_name=user_name,
+            language_level=language_level,
+            learning_goal=learning_goal
+        )
+
+        # Generate the example sentence
+        crew = ExampleSentenceCrew()
+        result = crew.run(crew_input)
 
         return jsonify(result.model_dump()), 200
 

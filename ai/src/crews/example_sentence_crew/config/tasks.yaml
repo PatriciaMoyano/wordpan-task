@@ -1,0 +1,31 @@
+generate_example_sentence:
+  description: |
+    Generate a contextual example sentence for the word "{word_english}".
+    Spanish translation: "{word_spanish}"
+    
+    User context:
+    - Name: {user_name}
+    - Language level: {language_level}
+    - Learning goal: {learning_goal}
+    
+    Create an example sentence that:
+    1. Uses the word "{word_english}" naturally in context
+    2. Is appropriate for their language level
+    3. Is practical and relevant to everyday situations
+    4. Is memorable and easy to understand
+    
+    Provide:
+    - The example sentence in English using the word
+    - The accurate translation to Spanish (translate the entire sentence, not just the word)
+    - A brief explanation (1-2 sentences) of why this example is helpful or any grammar/usage notes
+    
+    Note: If the Spanish translation was not provided or shows "(translation not provided)", 
+    you should still translate the entire example sentence to Spanish.
+  expected_output: |
+    A JSON object with exactly these fields:
+    {{
+      "sentence_english": "The example sentence in English using the word",
+      "sentence_spanish": "La traducción completa de la oración al español",
+      "explanation": "A brief explanation of the usage or why this example is helpful"
+    }}
+  agent: language_teacher
