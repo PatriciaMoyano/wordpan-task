@@ -30,6 +30,35 @@ export interface Database {
           created_at?: string
         }
       }
+      profiles: {
+        Row: {
+          id: string
+          context: string | null
+          full_name: string | null
+          language_level: string | null
+          learning_goal: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          context?: string | null
+          full_name?: string | null
+          language_level?: string | null
+          learning_goal?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          context?: string | null
+          full_name?: string | null
+          language_level?: string | null
+          learning_goal?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
